@@ -69,4 +69,30 @@ The space complexity of the algorithm can be analyzed as follows:
 
 \textbf{Conclusion:} The time complexity of the backtracking algorithm is $O(2^n)$, and the space complexity is $O(n)$.
 
+\newpage
+
+\section*{Complexity Analysis for the DP function}
+
+\subsubsection*{Time Complexity}
+The time complexity of the dynamic programming function can be analyzed as follows:
+\begin{itemize}
+    \item The DP state is defined by three parameters: $n$ (number of elements left), $sumCalculated$ (current sum of one subset), and $subsetSize$ (number of elements in the subset).
+    \item $n$ can go from $0$ to $N$ (where $N$ is the size of the input array).
+    \item $sumCalculated$ can range from $0$ to $S$, where $S$ is the total sum of all elements in the array.
+    \item $subsetSize$ can go from $0$ to $N$.
+    \item The memoization table has size $O(N \cdot S \cdot N)$.
+    \item For each state, the function does $O(1)$ work (two recursive calls and a min).
+    \item Therefore, the overall time complexity is $O(N^2 \cdot S)$, where $S$ is the total sum of the array.
+\end{itemize}
+
+\subsubsection*{Space Complexity}
+The space complexity of the dynamic programming function is:
+\begin{itemize}
+    \item The memoization table uses $O(N^2 \cdot S)$ space.
+    \item The recursion stack uses $O(N)$ space (maximum depth).
+    \item Therefore, the total space complexity is $O(N^2 \cdot S)$.
+\end{itemize}
+
+\textbf{Conclusion:} The time and space complexity of the dynamic programming function are both $O(N^2 \cdot S)$, where $N$ is the number of elements and $S$ is the total sum of the array.
+
 \end{document}
