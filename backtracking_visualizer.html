@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtracking Algorithm Visualizer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        input[type="text"] {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 150px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .visualization {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .tree-container {
+            flex: 2;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .info-panel {
+            flex: 1;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .tree-svg {
+            width: 100%;
+            height: 500px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .node {
+            cursor: pointer;
+        }
+        
+        .node circle {
+            fill: #e2e8f0;
+            stroke: #4a5568;
+            stroke-width: 2;
+            transition: all 0.3s;
+        }
+        
+        .node.current circle {
+            fill: #ffd700;
+            stroke: #ff8c00;
+            stroke-width: 3;
+        }
+        
+        .node.visited circle {
+            fill: #90cdf4;
+            stroke: #3182ce;
+        }
+        
+        .node.pruned circle {
+            fill: #fed7d7;
+            stroke: #e53e3e;
+        }
+        
+        .node.solution circle {
+            fill: #c6f6d5;
+            stroke: #38a169;
+            stroke-width: 3;
+        }
+        
+        .node text {
+            text-anchor: middle;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .link {
+            fill: none;
+            stroke: #a0aec0;
+            stroke-width: 2;
+            transition: all 0.3s;
+        }
+        
+        .link.active {
+            stroke: #3182ce;
+            stroke-width: 3;
+        }
+        
+        .step-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .subset-display {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        
+        .subset {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .subset1 {
+            background: #e6fffa;
+            border: 2px solid #4fd1c7;
+        }
+        
+        .subset2 {
+            background: #fef5e7;
+            border: 2px solid #f6ad55;
+        }
+        
+        .stats {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+        }
+
+        .final-result {
+            display: none;
+            margin-top: 20px;
+            background: #f0fff4;
+            border: 2px solid #38a169;
+            border-radius: 8px;
+            padding: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌳 Backtracking Algorithm Visualizer</h1>
+            <p>Partition a set into two balanced subsets with minimum sum difference</p>
+        </div>
+        
+        <div class="controls">
+            <div class="input-group">
+                <label>Input Set:</label>
+                <input type="text" id="inputSet" value="3,1,4,2" placeholder="e.g., 3,1,4,2">
+            </div>
+            <button onclick="startVisualization()">🚀 Start Visualization</button>
+            <button onclick="nextStep()" id="nextBtn" disabled>➡️ Next Step</button>
+            <button onclick="autoPlay()" id="autoBtn" disabled>⏯️ Auto Play</button>
+            <button onclick="reset()">🔄 Reset</button>
+        </div>
+        
+        <div class="visualization">
+            <div class="tree-container">
+                <h3>Exploration Tree</h3>
+                <svg class="tree-svg" id="treeSvg"></svg>
+            </div>
+            
+            <div class="info-panel">
+                <div class="step-info" id="stepInfo">
+                    <h4>Algorithm Status</h4>
+                    <p>Enter a set of numbers and click "Start Visualization" to begin!</p>
+                </div>
+                
+                <div class="subset-display">
+                    <div class="subset subset1">
+                        <div>Subset 1</div>
+                        <div id="subset1">[ ]</div>
+                        <div>Sum: <span id="sum1">0</span></div>
+                    </div>
+                    <div class="subset subset2">
+                        <div>Subset 2</div>
+                        <div id="subset2">[ ]</div>
+                        <div>Sum: <span id="sum2">0</span></div>
+                    </div>
+                </div>
+                
+                <div class="stats">
+                    <h4>Statistics</h4>
+                    <div class="stat-item">
+                        <span>Current Difference:</span>
+                        <span id="currentDiff">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Best Difference:</span>
+                        <span id="bestDiff">∞</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Nodes Explored:</span>
+                        <span id="nodesExplored">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Nodes Pruned:</span>
+                        <span id="nodesPruned">0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <!-- Final result display -->
+                <div class="final-result" id="finalResult">
+                    <h4 style="color:#38a169;">🎉 Final Best Partition</h4>
+                    <div style="margin-bottom:8px;">
+                        <strong>Subset 1:</strong> <span id="finalSubset1"></span> <span style="color:#4fd1c7;">(Sum: <span id="finalSum1"></span>)</span>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <strong>Subset 2:</strong> <span id="finalSubset2"></span> <span style="color:#f6ad55;">(Sum: <span id="finalSum2"></span>)</span>
+                    </div>
+                    <div>
+                        <strong>Minimum Difference:</strong> <span id="finalDiff"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script>
+        let inputSet = [];
+        let steps = [];
+        let currentStep = 0;
+        let isAutoPlaying = false;
+        let autoInterval;
+
+        // For final result
+        let finalBest1 = [];
+        let finalBest2 = [];
+        let finalMinDiff = Infinity;
+        
+        class TreeNode {
+            constructor(index, subset1, subset2, sum1, sum2, decision = '') {
+                this.index = index;
+                this.subset1 = [...subset1];
+                this.subset2 = [...subset2];
+                this.sum1 = sum1;
+                this.sum2 = sum2;
+                this.decision = decision;
+                this.children = [];
+                this.parent = null;
+                this.id = Math.random().toString(36).substr(2, 9);
+                this.status = 'unvisited'; // unvisited, current, visited, pruned, solution
+            }
+        }
+        
+        function backTracking(set, n, index, subset1, subset2, sum1, sum2, minDiff, best1, best2, parent = null) {
+            const node = new TreeNode(index, subset1, subset2, sum1, sum2, 
+                parent ? (parent.subset1.length !== subset1.length ? 'Add to S1' : 'Add to S2') : 'Root');
+            
+            if (parent) {
+                parent.children.push(node);
+                node.parent = parent;
+            }
+            
+            steps.push({
+                type: 'visit',
+                node: node,
+                message: `Visiting node: index=${index}, S1=[${subset1}], S2=[${subset2}]`,
+                currentDiff: Math.abs(sum1 - sum2),
+                minDiff: minDiff.value,
+                subset1: [...subset1],
+                subset2: [...subset2],
+                sum1: sum1,
+                sum2: sum2
+            });
+            
+            // Check Valid Subsets Sizes (Pruning)
+            let maxSize1, maxSize2;
+            if (n % 2 === 0) {
+                maxSize1 = maxSize2 = n / 2;
+            } else {
+                maxSize1 = maxSize2 = Math.floor((n + 1) / 2);
+            }
+            
+            if (subset1.length > maxSize1 || subset2.length > maxSize2) {
+                steps.push({
+                    type: 'prune',
+                    node: node,
+                    message: `Pruned: Subset sizes exceed limits (${subset1.length}, ${subset2.length})`,
+                    reason: 'Size constraint violation'
+                });
+                node.status = 'pruned';
+                return node;
+            }
+            
+            if (index === n) { // Base case
+                const diff = Math.abs(sum1 - sum2);
+                steps.push({
+                    type: 'leaf',
+                    node: node,
+                    message: `Leaf node reached. Difference = ${diff}`,
+                    currentDiff: diff,
+                    minDiff: minDiff.value
+                });
+                
+                if (diff < minDiff.value) {
+                    minDiff.value = diff;
+                    best1.length = 0;
+                    best2.length = 0;
+                    best1.push(...subset1);
+                    best2.push(...subset2);
+                    
+                    steps.push({
+                        type: 'solution',
+                        node: node,
+                        message: `New best solution found! Difference = ${diff}`,
+                        minDiff: diff,
+                        bestSubset1: [...subset1],
+                        bestSubset2: [...subset2]
+                    });
+                    node.status = 'solution';
+                }
+                return node;
+            }
+            
+            // Try adding to subset1
+            subset1.push(set[index]);
+            const leftChild = backTracking(set, n, index + 1, subset1, subset2, 
+                sum1 + set[index], sum2, minDiff, best1, best2, node);
+            subset1.pop();
+            
+            // Try adding to subset2
+            subset2.push(set[index]);
+            const rightChild = backTracking(set, n, index + 1, subset1, subset2, 
+                sum1, sum2 + set[index], minDiff, best1, best2, node);
+            subset2.pop();
+            
+            return node;
+        }
+        
+        function startVisualization() {
+            const input = document.getElementById('inputSet').value;
+            try {
+                inputSet = input.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+                if (inputSet.length === 0) throw new Error('Empty set');
+                
+                steps = [];
+                currentStep = 0;
+                finalBest1 = [];
+                finalBest2 = [];
+                finalMinDiff = Infinity;
+                document.getElementById('finalResult').style.display = 'none';
+
+                const minDiff = { value: Infinity };
+                const best1 = [];
+                const best2 = [];
+                
+                const rootNode = backTracking(inputSet, inputSet.length, 0, [], [], 0, 0, minDiff, best1, best2);
+
+                // Save the final best solution for display
+                finalBest1 = [...best1];
+                finalBest2 = [...best2];
+                finalMinDiff = minDiff.value;
+                
+                document.getElementById('nextBtn').disabled = false;
+                document.getElementById('autoBtn').disabled = false;
+                
+                updateDisplay();
+                drawTree(rootNode);
+                
+                document.getElementById('stepInfo').innerHTML = `
+                    <h4>Visualization Ready</h4>
+                    <p>Set: [${inputSet.join(', ')}]</p>
+                    <p>Total steps: ${steps.length}</p>
+                    <p>Click "Next Step" or "Auto Play" to begin!</p>
+                `;
+                
+            } catch (error) {
+                alert('Please enter valid numbers separated by commas (e.g., 3,1,4,2)');
+            }
+        }
+        
+        function nextStep() {
+            if (currentStep >= steps.length) return;
+            
+            const step = steps[currentStep];
+            updateStepDisplay(step);
+            highlightCurrentNode(step.node);
+            currentStep++;
+            
+            if (currentStep >= steps.length) {
+                document.getElementById('nextBtn').disabled = true;
+                document.getElementById('autoBtn').disabled = true;
+                showFinalResult();
+            }
+            
+            updateProgress();
+        }
+        
+        function autoPlay() {
+            if (isAutoPlaying) {
+                clearInterval(autoInterval);
+                isAutoPlaying = false;
+                document.getElementById('autoBtn').textContent = '⏯️ Auto Play';
+            } else {
+                isAutoPlaying = true;
+                document.getElementById('autoBtn').textContent = '⏸️ Pause';
+                autoInterval = setInterval(() => {
+                    if (currentStep >= steps.length) {
+                        clearInterval(autoInterval);
+                        isAutoPlaying = false;
+                        document.getElementById('autoBtn').textContent = '⏯️ Auto Play';
+                        document.getElementById('autoBtn').disabled = true;
+                        showFinalResult();
+                        return;
+                    }
+                    nextStep();
+                }, 1000);
+            }
+        }
+        
+        function reset() {
+            if (isAutoPlaying) {
+                clearInterval(autoInterval);
+                isAutoPlaying = false;
+            }
+            
+            currentStep = 0;
+            steps = [];
+            finalBest1 = [];
+            finalBest2 = [];
+            finalMinDiff = Infinity;
+            document.getElementById('finalResult').style.display = 'none';
+
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('autoBtn').disabled = true;
+            document.getElementById('autoBtn').textContent = '⏯️ Auto Play';
+            
+            document.getElementById('treeSvg').innerHTML = '';
+            
+            document.getElementById('stepInfo').innerHTML = `
+                <h4>Algorithm Status</h4>
+                <p>Enter a set of numbers and click "Start Visualization" to begin!</p>
+            `;
+            
+            updateDisplay();
+        }
+        
+        function updateStepDisplay(step) {
+            const stepInfo = document.getElementById('stepInfo');
+            let statusClass = '';
+            let icon = '';
+            
+            switch (step.type) {
+                case 'visit':
+                    statusClass = 'visit';
+                    icon = '🔍';
+                    break;
+                case 'prune':
+                    statusClass = 'prune';
+                    icon = '✂️';
+                    break;
+                case 'leaf':
+                    statusClass = 'leaf';
+                    icon = '🍃';
+                    break;
+                case 'solution':
+                    statusClass = 'solution';
+                    icon = '🎯';
+                    break;
+            }
+            
+            stepInfo.innerHTML = `
+                <h4>${icon} Step ${currentStep + 1}/${steps.length}</h4>
+                <p><strong>${step.message}</strong></p>
+                ${step.reason ? `<p><em>Reason: ${step.reason}</em></p>` : ''}
+            `;
+            
+            // Update current subsets
+            if (step.subset1 !== undefined) {
+                document.getElementById('subset1').textContent = `[${step.subset1.join(', ')}]`;
+                document.getElementById('sum1').textContent = step.sum1 || 0;
+            }
+            if (step.subset2 !== undefined) {
+                document.getElementById('subset2').textContent = `[${step.subset2.join(', ')}]`;
+                document.getElementById('sum2').textContent = step.sum2 || 0;
+            }
+            
+            document.getElementById('currentDiff').textContent = step.currentDiff || 0;
+            document.getElementById('bestDiff').textContent = step.minDiff === Infinity ? '∞' : step.minDiff;
+        }
+        
+        function drawTree(rootNode) {
+            const svg = d3.select('#treeSvg');
+            svg.selectAll('*').remove();
+            
+            const width = svg.node().getBoundingClientRect().width;
+            const height = 500;
+            
+            const treeLayout = d3.tree().size([width - 100, height - 100]);
+            
+            // Convert to d3 hierarchy
+            function convertToHierarchy(node) {
+                return {
+                    data: node,
+                    children: node.children.map(convertToHierarchy)
+                };
+            }
+            
+            const root = d3.hierarchy(convertToHierarchy(rootNode));
+            treeLayout(root);
+            
+            const g = svg.append('g').attr('transform', 'translate(50, 50)');
+            
+            // Draw links
+            g.selectAll('.link')
+                .data(root.links())
+                .enter().append('path')
+                .attr('class', 'link')
+                .attr('d', d3.linkVertical()
+                    .x(d => d.x)
+                    .y(d => d.y));
+            
+            // Draw nodes
+            const nodes = g.selectAll('.node')
+                .data(root.descendants())
+                .enter().append('g')
+                .attr('class', 'node')
+                .attr('transform', d => `translate(${d.x},${d.y})`)
+                .attr('id', d => `node-${d.data.data.id}`);
+            
+            nodes.append('circle')
+                .attr('r', 15);
+            
+            nodes.append('text')
+                .attr('dy', '0.35em')
+                .text(d => d.data.data.index);
+            
+            // Add hover tooltips
+            nodes.append('title')
+                .text(d => {
+                    const node = d.data.data;
+                    return `Index: ${node.index}\nS1: [${node.subset1.join(', ')}]\nS2: [${node.subset2.join(', ')}]\nDiff: ${Math.abs(node.sum1 - node.sum2)}`;
+                });
+        }
+        
+        function highlightCurrentNode(node) {
+            // Reset all nodes
+            d3.selectAll('.node circle').attr('class', '');
+            
+            // Highlight current node
+            d3.select(`#node-${node.id} circle`).attr('class', node.status);
+            
+            // Update statistics
+            const exploredCount = steps.slice(0, currentStep + 1).filter(s => s.type === 'visit').length;
+            const prunedCount = steps.slice(0, currentStep + 1).filter(s => s.type === 'prune').length;
+            
+            document.getElementById('nodesExplored').textContent = exploredCount;
+            document.getElementById('nodesPruned').textContent = prunedCount;
+        }
+        
+        function updateDisplay() {
+            document.getElementById('subset1').textContent = '[ ]';
+            document.getElementById('subset2').textContent = '[ ]';
+            document.getElementById('sum1').textContent = '0';
+            document.getElementById('sum2').textContent = '0';
+            document.getElementById('currentDiff').textContent = '0';
+            document.getElementById('bestDiff').textContent = '∞';
+            document.getElementById('nodesExplored').textContent = '0';
+            document.getElementById('nodesPruned').textContent = '0';
+            updateProgress();
+        }
+        
+        function updateProgress() {
+            const progress = steps.length > 0 ? (currentStep / steps.length) * 100 : 0;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function showFinalResult() {
+            if (finalBest1.length > 0 || finalBest2.length > 0) {
+                document.getElementById('finalSubset1').textContent = `[${finalBest1.join(', ')}]`;
+                document.getElementById('finalSubset2').textContent = `[${finalBest2.join(', ')}]`;
+                document.getElementById('finalSum1').textContent = finalBest1.reduce((a, b) => a + b, 0);
+                document.getElementById('finalSum2').textContent = finalBest2.reduce((a, b) => a + b, 0);
+                document.getElementById('finalDiff').textContent = finalMinDiff === Infinity ? '∞' : finalMinDiff;
+                document.getElementById('finalResult').style.display = 'block';
+            }
+        }
+        
+        // Initialize with default values
+        updateDisplay();
+    </script>
+</body>
+</html>
